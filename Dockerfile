@@ -1,6 +1,8 @@
 # Built from a hybrid of the official WP container with added memcached 
 
-FROM php:7.4-fpm
+FROM php:8.3.14-fpm
+
+ARG IMAGICK_VERSION=3.7.0
 
 # persistent dependencies
 RUN set -eux; \
@@ -8,7 +10,10 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 # Ghostscript is required for rendering PDF previews
 		ghostscript \
-	        libpq-dev libmemcached-dev libonig-dev libcurl4-gnutls-dev ; \
+	        libpq-dev libmemcached-dev libonig-dev libcurl4-gnutls-dev \
+		libmagickwand-6.q16-6 \
+		libzip4 \
+		; \
 	rm -rf /var/lib/apt/lists/*
 
 # install the PHP extensions we need (https://make.wordpress.org/hosting/handbook/handbook/server-environment/#php-extensions)
@@ -44,10 +49,20 @@ RUN set -ex; \
 		xml \
 	; \
 # https://pecl.php.net/package/imagick
-	pecl install imagick-3.6.0; \
-	docker-php-ext-enable imagick; \
-	rm -r /tmp/pear; \
-	pecl install memcache-4.0.5.2; \
+# https://github.com/Imagick/imagick/issues/698 - ref PHP 8.3 and above
+        curl -L -o /tmp/imagick.tar.gz https://github.com/Imagick/imagick/archive/tags/${IMAGICK_VERSION}.tar.gz ; \
+        tar --strip-components=1 -xf /tmp/imagick.tar.gz ; \
+        sed -i 's/php_strtolower/zend_str_tolower/g' imagick.c ; \
+        phpize ; \
+        ./configure ; \
+        make ; \
+        make install ; \
+        echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini ; \
+        rm -rf /tmp/* ; \
+#	pecl install imagick-3.7.0; \
+#	docker-php-ext-enable imagick; \
+#	rm -r /tmp/pear; \
+	pecl install memcache-8.2; \
 	pecl install memcached; \
 	echo extension=memcached.so >> /usr/local/etc/php/conf.d/memcached.ini; \
 	echo "extension=memcache.so" > /usr/local/etc/php/conf.d/ext-memcache.ini; \
