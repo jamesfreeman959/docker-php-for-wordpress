@@ -11,8 +11,6 @@ RUN set -eux; \
 # Ghostscript is required for rendering PDF previews
 		ghostscript \
 	        libpq-dev libmemcached-dev libonig-dev libcurl4-gnutls-dev \
-		libmagickwand-6.q16-6 \
-		libzip4 \
 		; \
 	rm -rf /var/lib/apt/lists/*
 
