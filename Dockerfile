@@ -1,6 +1,6 @@
 # Built from a hybrid of the official WP container with added memcached 
 
-FROM php:8.3.14-fpm
+FROM php:8.3-fpm
 
 ARG IMAGICK_VERSION=3.7.0
 
